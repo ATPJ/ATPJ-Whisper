@@ -2,7 +2,7 @@
 
 Offline **hold-to-talk dictation for Windows**. Hold a key, speak, release — the text is typed into whatever app has focus. Speech recognition runs locally with [faster-whisper](https://github.com/SYSTRAN/faster-whisper); nothing is sent to any server.
 
-Built for **Persian with English words mixed in** (e.g. *«این پروژه رو روی GitHub آپلود کردم»*): English words stay in English, Persian stays in Persian. Other languages work too — set `language` in the config.
+**A tool tuned for the Persian (Farsi) language.** Out of the box it is set up for Persian speech with English words mixed in (e.g. *«این پروژه رو روی GitHub آپلود کردم»*): English words stay in English, Persian stays in Persian, and a Persian-aware prompt, term list and correction dictionary improve accuracy. Other languages work too — set `language` in the config — but the special tuning is for Persian.
 
 > Inspired by tools like Wispr Flow. Not affiliated with them or with OpenAI.
 
@@ -27,12 +27,17 @@ Built for **Persian with English words mixed in** (e.g. *«این پروژه ر�
 
 ## Install & run
 
+1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) (one time). In PowerShell: `winget install --id=astral-sh.uv -e`
+2. Download and start the app:
+
 ```
-git clone <this repo>
-cd atpj-whisper
+git clone https://github.com/ATPJ/ATPJ-Whisper.git
+cd ATPJ-Whisper
 uv sync
 uv run app.py
 ```
+
+`uv sync` creates the virtual environment and installs everything (including Python 3.13), so no manual setup is needed.
 
 The first start downloads the model from Hugging Face; after that everything works **fully offline**. If you need a proxy for the download, put it in `config.json` (`"proxy": "http://127.0.0.1:8080"`).
 
@@ -40,7 +45,7 @@ Run the window-less background version (what *Start with Windows* uses): `.venv\
 
 ## Usage
 
-1. Wait until the status bar says **Ready**.
+1. Wait until the status bar says **Ready** (the first start downloads the model, which can take a few minutes).
 2. Click into any app, hold **F9**, speak, release.
 3. The text is pasted there and saved to the **History** tab.
 4. Closing the window keeps the app running in the tray. Right-click the tray icon for **Show**, **Start with Windows**, **Unload model now** and **Quit**. (Windows may hide new tray icons under the `^` arrow — drag it out to keep it visible.)
@@ -109,6 +114,6 @@ Licensed under the **MIT License** (see `LICENSE`).
 
 ## خلاصه به فارسی
 
-برنامه‌ی دیکته‌ی صوتی **کاملاً آفلاین** برای ویندوز: کلید F9 را نگه دار، حرف بزن، رها کن؛ متن در هر برنامه‌ای که باز است نوشته می‌شود. کلمات انگلیسی لابه‌لای فارسی به همان انگلیسی نوشته می‌شوند. تاریخچه با پخش صدا، ویرایش و حذف، بخش آمار (سرعت، زمان صرفه‌جویی‌شده)، اجرا در ترای و شروع خودکار با ویندوز دارد. وقتی چند دقیقه استفاده نشود، مدل به‌طور کامل از کارت گرافیک خارج می‌شود. هیچ داده‌ای از سیستم تو بیرون نمی‌رود.
+برنامه‌ی دیکته‌ی صوتی **کاملاً آفلاین** برای ویندوز که **مخصوص زبان فارسی تنظیم و بهینه شده است**: کلید F9 را نگه دار، حرف بزن، رها کن؛ متن در هر برنامه‌ای که باز است نوشته می‌شود. کلمات انگلیسی لابه‌لای فارسی به همان انگلیسی نوشته می‌شوند. تاریخچه با پخش صدا، ویرایش و حذف، بخش آمار (سرعت، زمان صرفه‌جویی‌شده)، اجرا در ترای و شروع خودکار با ویندوز دارد. وقتی چند دقیقه استفاده نشود، مدل به‌طور کامل از کارت گرافیک خارج می‌شود. هیچ داده‌ای از سیستم تو بیرون نمی‌رود.
 
-نصب: `uv sync` و بعد `uv run app.py` (بار اول مدل حدود ۳ گیگابایت دانلود می‌شود).
+نصب: ابتدا uv را نصب کن (`winget install --id=astral-sh.uv -e`)، سپس `git clone https://github.com/ATPJ/ATPJ-Whisper.git`، وارد پوشه شو و `uv sync` و بعد `uv run app.py` (بار اول مدل حدود ۳ گیگابایت دانلود می‌شود).
