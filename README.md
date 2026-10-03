@@ -8,7 +8,7 @@ Offline **hold-to-talk dictation for Windows**. Hold a key, speak, release — t
 
 ## Features
 
-- **Hold-to-talk or toggle** with a global hotkey (default `F9`); `Esc` cancels. A small floating pill shows *Recording / Transcribing / Pasted* without stealing focus.
+- **Hold to talk, double-tap for hands-free** (Wispr Flow style) with a global hotkey (default `F9`, or a combo like `ctrl+space`); `Esc` cancels. Plain hold-only and press-to-toggle modes are available too. A small floating pill shows *Recording / Transcribing / Pasted* without stealing focus.
 - **Pastes into any app** (clipboard + Ctrl+V, so Persian text is never mangled).
 - **Persian + English in one sentence.** A mixed-language prompt, a built-in list of common tech terms, and your own dictionary keep English words in Latin letters.
 - **Learns from your fixes.** Edit a transcript and press *Save edit*: single-word corrections (typos, `پایتون` → `Python`) are remembered and applied next time. Unknown words are snapped to the nearest word in your dictionary.
@@ -46,11 +46,13 @@ Run the window-less background version (what *Start with Windows* uses): `.venv\
 ## Usage
 
 1. Wait until the status bar says **Ready** (the first start downloads the model, which can take a few minutes).
-2. Click into any app, hold **F9**, speak, release.
+2. Click into any app, **hold F9**, speak, release — or **double-tap F9** to record hands-free and tap F9 once more to stop.
 3. The text is pasted there and saved to the **History** tab.
 4. Closing the window keeps the app running in the tray. Right-click the tray icon for **Show**, **Start with Windows**, **Unload model now** and **Quit**. (Windows may hide new tray icons under the `^` arrow — drag it out to keep it visible.)
 
-**Changing the hotkey:** open `config.json` (next to `app.py`; created on first run), set e.g. `"hotkey": "f8"` (or `"caps lock"`, `"right ctrl"`, `"pause"`…), then quit the app from the tray and start it again. Use a single key that you don't need elsewhere; combinations like `ctrl+space` aren't supported. To toggle instead of hold, set `"mode": "toggle"`.
+**Changing the hotkey:** open `config.json` (next to `app.py`; created on first run), set `"hotkey"`, then quit the app from the tray and start it again. Examples: `"f8"`, `"caps lock"`, `"right ctrl"`, or a combination such as `"ctrl+space"`, `"ctrl+alt+d"`, `"windows+space"`. Use something you don't need elsewhere (`windows+space` normally switches the keyboard language; the app suppresses it while running, but a plain key or `ctrl+space` is the safer choice).
+
+**Modes** (`"mode"` in `config.json`): `"auto"` (default) = hold to talk, quick double-tap for hands-free; `"hold"` = hold only; `"toggle"` = press to start, press to stop. A single short tap that isn't followed by a second one is ignored as an accident.
 
 **Fixing mistakes:** select a recording in History, edit the text, press **Save edit** (or Ctrl+S). Use **Add a word Whisper should know** for names and jargon.
 
@@ -60,8 +62,8 @@ Run the window-less background version (what *Start with Windows* uses): `.venv\
 
 | Key | Default | Meaning |
 |---|---|---|
-| `hotkey` | `"f9"` | A single key name from the [`keyboard`](https://github.com/boppreh/keyboard) library. Key combinations are not supported. |
-| `mode` | `"hold"` | `"hold"` = talk while pressed, `"toggle"` = press to start, press to stop |
+| `hotkey` | `"f9"` | A key or combination (`"ctrl+space"`, `"windows+space"`) using [`keyboard`](https://github.com/boppreh/keyboard) key names. |
+| `mode` | `"auto"` | `"auto"` = hold to talk + double-tap for hands-free, `"hold"` = talk while pressed, `"toggle"` = press to start, press to stop |
 | `language` | `"fa"` | Whisper language code (`"en"`, `"de"`, …) or `null` to auto-detect. The Persian prompt is only used for `"fa"`. |
 | `model` | `"large-v3"` | Any faster-whisper model: `large-v3` (most accurate), `large-v3-turbo` (faster, less accurate in Persian), `medium`, `small`, … |
 | `fuzzy` | `0.8` | Nearest-word cutoff (0–1). Lower = snaps more words to your dictionary, higher = fewer false corrections. |

@@ -1,11 +1,11 @@
 # Core logic (no GUI): config, history/dictionary DB, word corrections, transcription. Self-check: `uv run core.py --test`
-import os, sys, re, json, time, wave, difflib, sqlite3
+import os, sys, re, json, time, wave, difflib, sqlite3, threading
 import numpy as np
 
 os.chdir(os.environ.get("WHISPER_HOME") or os.path.dirname(os.path.abspath(__file__)))  # config/db/recordings live next to the code
 
-CFG = {"hotkey": "f9", "mode": "hold", "language": "fa", "model": "large-v3", "fuzzy": 0.8, "restore_clipboard": False,
-       "idle_unload_minutes": 5, "typing_wpm": 40, "proxy": ""}  # mode: hold | toggle; proxy (e.g. "http://127.0.0.1:8080") is only used to download the model
+CFG = {"hotkey": "f9", "mode": "auto", "language": "fa", "model": "large-v3", "fuzzy": 0.8, "restore_clipboard": False,
+       "idle_unload_minutes": 5, "typing_wpm": 40, "proxy": ""}  # mode: auto (hold = push-to-talk, double-tap = hands-free) | hold | toggle; proxy (e.g. "http://127.0.0.1:8080") is only used to download the model
 if os.path.exists("config.json"): CFG.update(json.load(open("config.json", encoding="utf-8")))
 else: json.dump(CFG, open("config.json", "w", encoding="utf-8"), indent=2)
 if CFG["proxy"]:
@@ -39,6 +39,35 @@ db.commit()
 for p, e in SEED.items():  # both with and without ZWNJ; "insert or ignore" keeps the user's own corrections
     db.executemany("insert or ignore into words values(?,?)", [(p, e), (p.replace("‌", ""), e), (e, e)])
 db.commit()
+
+class Gesture:  # turns raw hotkey press/release into start/stop. auto: hold = push-to-talk, quick double-tap = hands-free (tap again to stop)
+    def __init__(self, start, stop, mode="auto", tap=0.3, gap=0.4):
+        self.start, self.stop, self.mode, self.tap, self.gap = start, stop, mode, tap, gap
+        self.state, self.t0, self.timer, self.lock = "idle", 0, None, threading.RLock()  # idle | held | pending (short tap, waiting for 2nd) | locked
+
+    def press(self):
+        with self.lock:
+            if self.state == "held": return  # key auto-repeat
+            if self.state == "locked": self.state = "idle"; return self.stop()
+            if self.state == "pending": self.timer.cancel(); self.state = "locked"; return  # 2nd tap: keep recording hands-free
+            self.t0 = time.time(); self.start()
+            self.state = "locked" if self.mode == "toggle" else "held"
+
+    def release(self):
+        with self.lock:
+            if self.state != "held": return
+            if self.mode == "auto" and time.time() - self.t0 < self.tap:  # short tap: maybe the first half of a double-tap
+                self.state = "pending"; self.timer = threading.Timer(self.gap, self.expire); self.timer.start()
+            else: self.state = "idle"; self.stop()
+
+    def expire(self):  # a lone short tap is an accident, not a dictation
+        with self.lock:
+            if self.state == "pending": self.state = "idle"; self.stop(discard=True)
+
+    def reset(self):  # recording was stopped some other way (Esc)
+        with self.lock:
+            if self.timer: self.timer.cancel()
+            self.state = "idle"
 
 def tokens(s): return re.findall(r"[\w‌]+", s)
 
@@ -111,5 +140,11 @@ if __name__ == "__main__" and "--test" in sys.argv:
     st = stats(); t = st["periods"]["today"]
     assert t["words"] == 80 and round(t["wpm"]) == 80 and round(t["saved"]) == 60 and t["n"] == 1
     assert st["periods"]["all"]["words"] == 160 and st["streak"] == 2 and st["clean"] == 0.5 and st["daily"][-1][1] == 80
+    ev = []; gs = Gesture(lambda: ev.append("start"), lambda discard=False: ev.append("discard" if discard else "stop"), tap=0.1, gap=0.15)
+    gs.press(); gs.press(); time.sleep(0.12); gs.release(); assert ev == ["start", "stop"]  # hold (auto-repeat ignored)
+    ev.clear(); gs.press(); gs.release(); gs.press(); gs.release(); time.sleep(0.2); assert ev == ["start"]  # double-tap: locked, still recording
+    gs.press(); assert ev == ["start", "stop"] and gs.state == "idle"  # next press stops
+    ev.clear(); gs.press(); gs.release(); time.sleep(0.25); assert ev == ["start", "discard"]  # lone tap discarded
+    ev.clear(); gs.mode = "toggle"; gs.press(); gs.release(); gs.press(); assert ev == ["start", "stop"]
     print("ok"); sys.exit()
 

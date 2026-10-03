@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QHBoxLayout, Q
                              QMenu, QMessageBox, QPushButton, QSplitter, QStyle, QSystemTrayIcon, QTextEdit, QVBoxLayout, QWidget)
 import core
 from worker import Engine
-from core import CFG, db, learn
+from core import CFG, Gesture, db, learn
 
 if sys.stdout is None or sys.stderr is None:  # started via pythonw (autostart): no console, so log to a file
     sys.stdout = sys.stderr = open("app.log", "a", encoding="utf-8", buffering=1)
@@ -187,7 +187,8 @@ class Win(QMainWindow):
     def ready(self):
         self.state = "idle"
         tail = "" if self.engine.alive() else "  (model reloads on first use)"
-        self.say(f"Ready — {'hold' if CFG['mode'] == 'hold' else 'press'} {CFG['hotkey'].upper()} to talk · Esc cancels{tail}")
+        how = {"auto": "hold to talk, double-tap for hands-free", "hold": "hold to talk", "toggle": "press to start/stop"}.get(CFG["mode"], "")
+        self.say(f"Ready — {CFG['hotkey'].upper()}: {how} · Esc cancels{tail}")
 
     def flash(self, t):  # short message, then back to Ready unless something started meanwhile
         self.say(t, "info"); QTimer.singleShot(2500, lambda: self.state == "idle" and self.ready())
@@ -319,15 +320,6 @@ class Win(QMainWindow):
         keyboard.send("ctrl+v")
         if old is not None: threading.Timer(1.5, pyperclip.copy, (old,)).start()  # slow apps read the clipboard late
 
-    def on_press(self, _):
-        if self.down: return  # key auto-repeat
-        self.down = True
-        self.stop() if CFG["mode"] == "toggle" and self.stream else self.start()
-
-    def on_release(self, _):
-        self.down = False
-        if CFG["mode"] == "hold": self.stop()
-
 def main():
     k32 = ctypes.WinDLL("kernel32", use_last_error=True)
     k32.CreateMutexW(None, False, "ATPJWhisperSingleton")  # two copies would double every hotkey/paste
@@ -338,9 +330,13 @@ def main():
         return
     win = Win(); app.aboutToQuit.connect(win.engine.stop)
     if "--hidden" not in sys.argv: win.show()  # autostart begins in the tray
-    keyboard.on_press_key(CFG["hotkey"], win.on_press, suppress=True)
-    keyboard.on_release_key(CFG["hotkey"], win.on_release, suppress=True)
-    keyboard.add_hotkey("esc", lambda: win.stop(discard=True))
+    g = Gesture(win.start, win.stop, CFG["mode"])
+    keys = {sc for step in keyboard.parse_hotkey(CFG["hotkey"]) for k in step for sc in k}  # scan codes of every key in the hotkey
+    if "+" in CFG["hotkey"]: keyboard.add_hotkey(CFG["hotkey"], g.press, suppress=True)  # combo, e.g. ctrl+space / windows+space
+    else: keyboard.on_press_key(CFG["hotkey"], lambda _: g.press(), suppress=True)
+    keyboard.hook(lambda e: e.event_type == "up" and e.scan_code in keys and g.release())  # releasing ANY key of the hotkey ends the hold
+    def cancel(): g.reset(); win.stop(discard=True)
+    keyboard.add_hotkey("esc", cancel)
     threading.Thread(target=win.preload, daemon=True).start()
     sys.exit(app.exec())
 
