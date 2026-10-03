@@ -1,0 +1,15 @@
+[project]
+name = "atpj-whisper"
+version = "0.1.0"
+description = "Offline hold-to-talk dictation for Windows (faster-whisper + PySide6), tuned for Persian with English words"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.13"
+dependencies = [
+    "faster-whisper",
+    "sounddevice",
+    "keyboard",
+    "numpy",
+    "pyperclip>=1.11.0",
+    "pyside6-essentials>=6.11.2",
+]

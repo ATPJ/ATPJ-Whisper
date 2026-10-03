@@ -1,0 +1,13 @@
+# Your data — never commit these
+config.json
+history.db
+history.db-*
+recordings/
+*.log
+
+# Python / tooling
+.venv/
+__pycache__/
+*.pyc
+.codegraph/
+.claude/
