@@ -8,7 +8,7 @@ Offline **hold-to-talk dictation for Windows**. Hold a key, speak, release — t
 
 ## Features
 
-- **Hold to talk, double-tap for hands-free** (Wispr Flow style) with a global hotkey (default `F9`, or a combo like `ctrl+space`); `Esc` cancels. Plain hold-only and press-to-toggle modes are available too. A small floating pill shows *Recording / Transcribing / Pasted* without stealing focus.
+- **Hold to talk, double-tap for hands-free** (Wispr Flow style) with a global hotkey (default `F9`, or a combo like `ctrl+space`); `Esc` cancels. Plain hold-only and press-to-toggle modes are available too. A small floating pill shows *Recording (hold)*, *Hands-free (press to stop)*, *Transcribing* and *Pasted* without stealing focus, so you always know which mode you are in.
 - **Pastes into any app** (clipboard + Ctrl+V, so Persian text is never mangled).
 - **Persian + English in one sentence.** A mixed-language prompt, a built-in list of common tech terms, and your own dictionary keep English words in Latin letters.
 - **Learns from your fixes.** Edit a transcript and press *Save edit*: single-word corrections (typos, `پایتون` → `Python`) are remembered and applied next time. Unknown words are snapped to the nearest word in your dictionary.
@@ -47,6 +47,7 @@ Run the window-less background version (what *Start with Windows* uses): `.venv\
 
 1. Wait until the status bar says **Ready** (the first start downloads the model, which can take a few minutes).
 2. Click into any app, **hold F9**, speak, release — or **double-tap F9** to record hands-free and tap F9 once more to stop.
+   The pill says **● Recording (hold)** while you hold the key and **● Hands-free (press to stop)** after a double-tap.
 3. The text is pasted there and saved to the **History** tab.
 4. Closing the window keeps the app running in the tray. Right-click the tray icon for **Show**, **Start with Windows**, **Unload model now** and **Quit**. (Windows may hide new tray icons under the `^` arrow — drag it out to keep it visible.)
 

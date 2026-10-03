@@ -41,17 +41,18 @@ for p, e in SEED.items():  # both with and without ZWNJ; "insert or ignore" keep
 db.commit()
 
 class Gesture:  # turns raw hotkey press/release into start/stop. auto: hold = push-to-talk, quick double-tap = hands-free (tap again to stop)
-    def __init__(self, start, stop, mode="auto", tap=0.3, gap=0.4):
-        self.start, self.stop, self.mode, self.tap, self.gap = start, stop, mode, tap, gap
+    def __init__(self, start, stop, mode="auto", tap=0.3, gap=0.4, on_lock=lambda: None):  # on_lock: recording became hands-free
+        self.start, self.stop, self.mode, self.tap, self.gap, self.on_lock = start, stop, mode, tap, gap, on_lock
         self.state, self.t0, self.timer, self.lock = "idle", 0, None, threading.RLock()  # idle | held | pending (short tap, waiting for 2nd) | locked
 
     def press(self):
         with self.lock:
             if self.state == "held": return  # key auto-repeat
             if self.state == "locked": self.state = "idle"; return self.stop()
-            if self.state == "pending": self.timer.cancel(); self.state = "locked"; return  # 2nd tap: keep recording hands-free
+            if self.state == "pending": self.timer.cancel(); self.state = "locked"; self.on_lock(); return  # 2nd tap: keep recording hands-free
             self.t0 = time.time(); self.start()
-            self.state = "locked" if self.mode == "toggle" else "held"
+            self.state = "held"
+            if self.mode == "toggle": self.state = "locked"; self.on_lock()
 
     def release(self):
         with self.lock:

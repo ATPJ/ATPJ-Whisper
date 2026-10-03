@@ -289,7 +289,7 @@ class Win(QMainWindow):
                                          callback=lambda d, *_: self.chunks.append(d.copy()))
             self.stream.start()
         except Exception as e: self.stream = None; return self.say(f"Microphone error: {e}", "rec", "Mic error", 2500)
-        self.state = "rec"; self.say("Recording…", "rec", "● Recording")
+        self.state = "rec"; self.say("Recording — release the key to finish", "rec", "● Recording (hold)")
 
     def stop(self, discard=False):
         s, self.stream = self.stream, None
@@ -330,7 +330,7 @@ def main():
         return
     win = Win(); app.aboutToQuit.connect(win.engine.stop)
     if "--hidden" not in sys.argv: win.show()  # autostart begins in the tray
-    g = Gesture(win.start, win.stop, CFG["mode"])
+    g = Gesture(win.start, win.stop, CFG["mode"], on_lock=lambda: win.say("Hands-free recording — press the key once to stop", "rec", "● Hands-free (press to stop)"))
     keys = {sc for step in keyboard.parse_hotkey(CFG["hotkey"]) for k in step for sc in k}  # scan codes of every key in the hotkey
     if "+" in CFG["hotkey"]: keyboard.add_hotkey(CFG["hotkey"], g.press, suppress=True)  # combo, e.g. ctrl+space / windows+space
     else: keyboard.on_press_key(CFG["hotkey"], lambda _: g.press(), suppress=True)
