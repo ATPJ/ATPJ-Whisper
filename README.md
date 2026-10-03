@@ -50,6 +50,8 @@ Run the window-less background version (what *Start with Windows* uses): `.venv\
 3. The text is pasted there and saved to the **History** tab.
 4. Closing the window keeps the app running in the tray. Right-click the tray icon for **Show**, **Start with Windows**, **Unload model now** and **Quit**. (Windows may hide new tray icons under the `^` arrow — drag it out to keep it visible.)
 
+**Changing the hotkey:** open `config.json` (next to `app.py`; created on first run), set e.g. `"hotkey": "f8"` (or `"caps lock"`, `"right ctrl"`, `"pause"`…), then quit the app from the tray and start it again. Use a single key that you don't need elsewhere; combinations like `ctrl+space` aren't supported. To toggle instead of hold, set `"mode": "toggle"`.
+
 **Fixing mistakes:** select a recording in History, edit the text, press **Save edit** (or Ctrl+S). Use **Add a word Whisper should know** for names and jargon.
 
 ## Configuration
